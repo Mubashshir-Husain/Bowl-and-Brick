@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
@@ -33,6 +33,161 @@ import {
   UtensilsCrossed
 } from 'lucide-react';
 
+/* =========================================================
+   ANIMATION STYLES (no Tailwind config changes needed)
+========================================================= */
+const animationStyles = `
+  :root { --ease-out: cubic-bezier(0.22, 1, 0.36, 1); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeOnly {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes cartBarIn {
+    from { opacity: 0; transform: translateY(40px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes bump {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.25); }
+    100% { transform: scale(1); }
+  }
+  @keyframes softPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(200, 169, 107, 0.4); }
+    50%      { box-shadow: 0 0 0 9px rgba(200, 169, 107, 0); }
+  }
+  @keyframes gentleFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-5px); }
+  }
+
+  /* ---- Page load ---- */
+  .page-fade   { animation: fadeOnly 0.7s ease-out both; }
+  .filters-in  { animation: fadeDown 0.7s var(--ease-out) 0.15s both; }
+  .banner-in   { animation: fadeDown 0.6s var(--ease-out) both; }
+  .state-in    { animation: fadeUp 0.7s var(--ease-out) both; }
+  .modal-fade  { animation: fadeOnly 0.3s ease-out backwards; }
+
+  /* ---- Scroll / mount reveal for menu cards ---- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(26px) scale(0.97);
+    transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+    will-change: opacity, transform;
+  }
+  .reveal.is-visible { opacity: 1; transform: none; }
+
+  /* Card hover (desktop only, so touch devices don't get stuck states) */
+  .card-wrap { transition: transform 0.45s var(--ease-out), filter 0.45s ease; }
+  @media (hover: hover) {
+    .card-wrap:hover { transform: translateY(-6px); filter: drop-shadow(0 18px 24px rgba(0,0,0,0.55)); }
+  }
+  .card-wrap:active { transform: scale(0.98); }
+
+  /* ---- Cart bar ---- */
+  .cart-bar-in { animation: cartBarIn 0.6s var(--ease-out) both; }
+  .cart-bar    { transition: transform 0.3s var(--ease-out), box-shadow 0.3s ease, border-color 0.3s ease; }
+  @media (hover: hover) {
+    .cart-bar:hover { transform: translateY(-3px); border-color: rgba(200,169,107,0.6); box-shadow: 0 18px 40px -12px rgba(200,169,107,0.35); }
+  }
+  .cart-icon-pulse { animation: softPulse 2.6s ease-in-out infinite; }
+  .cart-bump       { display: inline-block; animation: bump 0.4s var(--ease-out); }
+  .cart-arrow      { transition: transform 0.3s var(--ease-out); }
+  .cart-bar:hover .cart-arrow { transform: translateX(4px); }
+
+  /* ---- Buttons & icons ---- */
+  .btn-soft { transition: transform 0.3s var(--ease-out), background-color 0.3s ease, border-color 0.3s ease; }
+  .btn-soft:hover  { transform: translateY(-2px); }
+  .btn-soft:active { transform: scale(0.97); }
+  .spin-on-hover:hover svg { transform: rotate(180deg); }
+  .spin-on-hover svg { transition: transform 0.6s var(--ease-out); }
+  .icon-float { animation: gentleFloat 3.2s ease-in-out infinite; }
+
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid #C8A96B;
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-fade, .filters-in, .banner-in, .state-in, .modal-fade, .cart-bar-in,
+    .cart-icon-pulse, .cart-bump, .icon-float, .reveal, .card-wrap {
+      animation: none !important;
+      transition: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+`;
+
+/* =========================================================
+   ANIMATION HELPERS (UI only — no data logic)
+========================================================= */
+function useInView(threshold = 0.1) {
+
+  const ref = useRef(null);
+
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+
+    const el = ref.current;
+
+    if (!el) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      setInView(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect(); // animate once
+        }
+      },
+      { threshold, rootMargin: '0px 0px -30px 0px' }
+    );
+
+    observer.observe(el);
+
+    return () => observer.disconnect();
+
+  }, [threshold]);
+
+  return [ref, inView];
+
+}
+
+function Reveal({ children, className = '', delay = 0 }) {
+
+  const [ref, inView] = useInView();
+
+  return (
+
+    <div
+      ref={ref}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`reveal ${inView ? 'is-visible' : ''} ${className}`}
+    >
+      {children}
+    </div>
+
+  );
+
+}
+
+/* =========================================================
+   PAGE
+========================================================= */
 const MenuPage = () => {
 
   const navigate = useNavigate();
@@ -213,7 +368,9 @@ const MenuPage = () => {
 
   return (
 
-    <div className="min-h-screen pb-24 text-[#F7F4ED] bg-[#100C09]">
+    <div className="page-fade min-h-screen pb-24 text-[#F7F4ED] bg-[#100C09]">
+
+      <style>{animationStyles}</style>
 
       {/* Compact Navbar with Search Icon toggle */}
 
@@ -229,7 +386,7 @@ const MenuPage = () => {
 
         {!isRestaurantOpen && !loading && (
 
-          <div className="p-3 bg-red-500/10 border border-red-400/25 rounded-xl flex items-start gap-2.5 text-red-200">
+          <div className="banner-in p-3 bg-red-500/10 border border-red-400/25 rounded-xl flex items-start gap-2.5 text-red-200">
 
             <AlertTriangle
               size={18}
@@ -255,13 +412,13 @@ const MenuPage = () => {
 
         {/* Sticky Filters & Expandable Search Bar */}
 
-        <div className="space-y-2 sticky top-[14px] z-20 bg-[#100C09]/95 backdrop-blur-md pt-1.5 pb-2.5 border-b border-[#C8A96B]/20 shadow-sm rounded-b-xl px-2">
+        <div className="filters-in space-y-2 sticky top-[14px] z-20 bg-[#100C09]/95 backdrop-blur-md pt-1.5 pb-2.5 border-b border-[#C8A96B]/20 shadow-sm rounded-b-xl px-2">
 
           {/* Expandable Search Bar */}
 
           {(isSearchOpen || searchTerm) && (
 
-            <div className="pt-0.5">
+            <div className="banner-in pt-0.5">
 
               <SearchBar
                 searchTerm={searchTerm}
@@ -295,11 +452,11 @@ const MenuPage = () => {
 
         {loading && (
 
-          <div className="py-14 text-center space-y-2">
+          <div className="state-in py-14 text-center space-y-2">
 
             <div className="w-8 h-8 border-3 border-[#C8A96B] border-t-transparent rounded-full animate-spin mx-auto" />
 
-            <p className="text-xs font-black text-[#C7D3C0]">
+            <p className="text-xs font-black text-[#C7D3C0] animate-pulse">
               Loading menu...
             </p>
 
@@ -311,9 +468,9 @@ const MenuPage = () => {
 
         {error && !loading && (
 
-          <div className="py-10 px-4 text-center bg-[#15110E] rounded-2xl border border-[#C8A96B]/15 space-y-3 shadow-sm">
+          <div className="state-in py-10 px-4 text-center bg-[#15110E] rounded-2xl border border-[#C8A96B]/15 space-y-3 shadow-sm">
 
-            <div className="w-10 h-10 bg-red-500/10 text-red-400 rounded-full flex items-center justify-center mx-auto border border-red-400/20">
+            <div className="icon-float w-10 h-10 bg-red-500/10 text-red-400 rounded-full flex items-center justify-center mx-auto border border-red-400/20">
 
               <AlertTriangle size={20} />
 
@@ -329,7 +486,7 @@ const MenuPage = () => {
 
             <button
               onClick={fetchData}
-              className="bg-[#15110E] border border-[#C8A96B]/30 text-[#C8A96B] hover:bg-[#C8A96B]/10 hover:border-[#C8A96B]/50 text-xs px-3.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 font-bold transition"
+              className="btn-soft spin-on-hover bg-[#15110E] border border-[#C8A96B]/30 text-[#C8A96B] hover:bg-[#C8A96B]/10 hover:border-[#C8A96B]/50 text-xs px-3.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 font-bold"
             >
               <RefreshCw size={13} />
               Try Again
@@ -345,9 +502,9 @@ const MenuPage = () => {
           !error &&
           filteredMenuItems.length === 0 && (
 
-            <div className="py-14 text-center space-y-3 bg-[#15110E] rounded-2xl border border-[#C8A96B]/15 p-6 shadow-sm">
+            <div className="state-in py-14 text-center space-y-3 bg-[#15110E] rounded-2xl border border-[#C8A96B]/15 p-6 shadow-sm">
 
-              <div className="w-12 h-12 bg-[#C8A96B]/10 text-[#C8A96B] rounded-full flex items-center justify-center mx-auto border border-[#C8A96B]/20">
+              <div className="icon-float w-12 h-12 bg-[#C8A96B]/10 text-[#C8A96B] rounded-full flex items-center justify-center mx-auto border border-[#C8A96B]/20">
 
                 <UtensilsCrossed size={24} />
 
@@ -384,7 +541,7 @@ const MenuPage = () => {
                     setSpiceFilter('All');
 
                   }}
-                  className="bg-[#15110E] border border-[#C8A96B]/30 text-[#C8A96B] hover:bg-[#C8A96B]/10 hover:border-[#C8A96B]/50 text-xs px-3.5 py-1.5 rounded-lg font-bold transition"
+                  className="btn-soft bg-[#15110E] border border-[#C8A96B]/30 text-[#C8A96B] hover:bg-[#C8A96B]/10 hover:border-[#C8A96B]/50 text-xs px-3.5 py-1.5 rounded-lg font-bold"
                 >
                   Reset All Filters
                 </button>
@@ -403,14 +560,21 @@ const MenuPage = () => {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
 
-              {filteredMenuItems.map((dish) => (
+              {filteredMenuItems.map((dish, index) => (
 
-                <MenuCard
+                <Reveal
                   key={dish._id}
-                  dish={dish}
-                  onSelectDish={(d) => setSelectedDish(d)}
-                  isRestaurantOpen={isRestaurantOpen}
-                />
+                  delay={(index % 4) * 80}
+                  className="card-wrap"
+                >
+
+                  <MenuCard
+                    dish={dish}
+                    onSelectDish={(d) => setSelectedDish(d)}
+                    isRestaurantOpen={isRestaurantOpen}
+                  />
+
+                </Reveal>
 
               ))}
 
@@ -424,16 +588,16 @@ const MenuPage = () => {
 
       {cartTotalCount > 0 && (
 
-        <div className="fixed bottom-14 left-3 right-3 z-30 max-w-md mx-auto animate-bounce-short">
+        <div className="cart-bar-in fixed bottom-14 left-3 right-3 z-30 max-w-md mx-auto">
 
           <div
             onClick={() => navigate('/cart')}
-            className="bg-[#15110E] text-[#F7F4ED] p-3.5 rounded-2xl shadow-2xl flex items-center justify-between cursor-pointer transition-all active:scale-[0.98] border border-[#C8A96B]/30 backdrop-blur-md"
+            className="cart-bar bg-[#15110E] text-[#F7F4ED] p-3.5 rounded-2xl shadow-2xl flex items-center justify-between cursor-pointer active:scale-[0.98] border border-[#C8A96B]/30 backdrop-blur-md"
           >
 
             <div className="flex items-center gap-3">
 
-              <div className="w-9 h-9 rounded-xl bg-[#C8A96B] text-[#100C09] flex items-center justify-center font-black shadow-sm">
+              <div className="cart-icon-pulse w-9 h-9 rounded-xl bg-[#C8A96B] text-[#100C09] flex items-center justify-center font-black shadow-sm">
 
                 <ShoppingBag size={18} />
 
@@ -443,7 +607,9 @@ const MenuPage = () => {
 
                 <p className="text-[11px] text-[#EEEEEE]/50 font-bold">
 
-                  {cartTotalCount}{' '}
+                  <span key={cartTotalCount} className="cart-bump">
+                    {cartTotalCount}
+                  </span>{' '}
 
                   {cartTotalCount === 1
                     ? 'Item'
@@ -452,7 +618,9 @@ const MenuPage = () => {
                 </p>
 
                 <p className="text-sm font-black text-[#C8A96B]">
-                  ₹{cartTotalAmount}
+                  <span key={cartTotalAmount} className="cart-bump">
+                    ₹{cartTotalAmount}
+                  </span>
                 </p>
 
               </div>
@@ -465,7 +633,7 @@ const MenuPage = () => {
                 View Cart
               </span>
 
-              <ArrowRight size={14} />
+              <ArrowRight size={14} className="cart-arrow" />
 
             </div>
 
@@ -479,11 +647,15 @@ const MenuPage = () => {
 
       {selectedDish && (
 
-        <MenuDetailsModal
-          dish={selectedDish}
-          onClose={() => setSelectedDish(null)}
-          isRestaurantOpen={isRestaurantOpen}
-        />
+        <div className="modal-fade">
+
+          <MenuDetailsModal
+            dish={selectedDish}
+            onClose={() => setSelectedDish(null)}
+            isRestaurantOpen={isRestaurantOpen}
+          />
+
+        </div>
 
       )}
 
