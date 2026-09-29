@@ -21,7 +21,10 @@ export const getMenuItems = async () => {
 
 export const createMenuItem = async (itemData) => {
   try {
-    const response = await api.post('/api/menu/add-item', itemData);
+    const isFormData = itemData instanceof FormData;
+    const response = await api.post('/api/menu/add-item', itemData, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    });
     return response.data;
   } catch (error) {
     console.error('Error creating menu item:', error);
@@ -31,7 +34,10 @@ export const createMenuItem = async (itemData) => {
 
 export const updateMenuItem = async (id, itemData) => {
   try {
-    const response = await api.put(`/api/menu/update-item/${id}`, itemData);
+    const isFormData = itemData instanceof FormData;
+    const response = await api.put(`/api/menu/update-item/${id}`, itemData, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    });
     return response.data;
   } catch (error) {
     console.error('Error updating menu item:', error);

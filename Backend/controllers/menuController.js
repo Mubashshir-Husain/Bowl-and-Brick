@@ -15,7 +15,12 @@ export const getMenuItems = async (req, res) => {
 // @route   POST /api/menu
 export const createMenuItem = async (req, res) => {
     try {
-        const newItem = new MenuItem(req.body);
+        const itemData = { ...req.body };
+        if (req.file) {
+            itemData.imageUrl = req.file.path;
+        }
+
+        const newItem = new MenuItem(itemData);
         const savedItem = await newItem.save();
         res.status(201).json(savedItem);
     } catch (error) {
@@ -23,15 +28,18 @@ export const createMenuItem = async (req, res) => {
     }
 };
 
-
-
 // @desc    Update a menu item (Admin)
 // @route   PUT /api/menu/update-item/:id
 export const updateMenuItem = async (req, res) => {
     try {
+        const updateData = { ...req.body };
+        if (req.file) {
+            updateData.imageUrl = req.file.path;
+        }
+
         const updatedItem = await MenuItem.findByIdAndUpdate(
             req.params.id, 
-            req.body, 
+            updateData, 
             { new: true, runValidators: true } // Update hone ke baad naya data return karega
         );
 

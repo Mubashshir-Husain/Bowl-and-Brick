@@ -22,6 +22,9 @@ const menuItemSchema = new mongoose.Schema(
         description: {
             type: String
         },
+        imageUrl: {
+            type: String
+        },
         spiceLevel: {
             type: String,
             enum: ["Low", "Medium", "High"]

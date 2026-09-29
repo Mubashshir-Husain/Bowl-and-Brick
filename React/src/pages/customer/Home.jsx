@@ -79,7 +79,7 @@ export default function Home() {
               Welcome to {restaurant?.name || 'Bowl and Brick'}
             </p>
 
-            <h1 className="font-serif text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">
+            <h1 className="font-serif text-4xl leading-[1.05] sm:text-6xl lg:text-7xl">
               AUTHENTIC.
               <span className="block text-[#C8A96B]">
                 FRESH.

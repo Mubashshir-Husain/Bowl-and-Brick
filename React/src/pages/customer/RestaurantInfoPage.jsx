@@ -244,7 +244,7 @@ const RestaurantInfoPage = () => {
             {/* Back to Menu button */}
 
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/menu')}
               className="w-full py-3 text-xs font-black flex items-center justify-center gap-1.5 bg-[#C8A96B] hover:bg-[#D8BB7C] text-[#100C09] rounded-xl shadow-sm transition"
             >
 

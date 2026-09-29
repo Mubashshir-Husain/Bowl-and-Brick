@@ -187,7 +187,7 @@ const OrderTrackingPage = () => {
           <div className="flex items-center gap-2">
 
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/cart')}
               className="p-1.5 rounded-lg hover:bg-[#C8A96B]/10 text-[#EEEEEE]/70 hover:text-[#C8A96B] transition"
             >
               <ChevronLeft size={18} />

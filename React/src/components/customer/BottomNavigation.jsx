@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 
 import { selectCartTotalCount, selectCartTotalAmount } from '../../redux/slices/cartSlice';
 
-import { UtensilsCrossed, ShoppingBag, Clock, Info } from 'lucide-react';
+import { UtensilsCrossed, ShoppingBag, Clock, Info, HomeIcon } from 'lucide-react';
 
 const BottomNavigation = () => {
 
@@ -23,6 +23,30 @@ const BottomNavigation = () => {
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#100C09] border-t border-[#C8A96B]/25 py-1.5 px-4 shadow-lg">
 
       <div className="max-w-md mx-auto flex items-center justify-around">
+
+
+
+       <NavLink
+
+          to="/"
+
+          end
+
+          className={({ isActive }) =>
+            `flex flex-col items-center gap-0.5 text-[10px] font-black transition ${
+              isActive
+                ? 'text-[#C8A96B] font-extrabold'
+                : 'text-[#EEEEEE]/55 font-semibold hover:text-[#F7F4ED]'
+            }`
+          }
+
+        >
+
+          <HomeIcon size={17} />
+
+          <span>Home</span>
+
+        </NavLink>
 
         <NavLink
 

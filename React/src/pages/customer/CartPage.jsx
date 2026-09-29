@@ -43,7 +43,7 @@ const CartPage = () => {
           <div className="flex items-center gap-2.5">
 
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/menu')}
               className="p-1.5 rounded-lg hover:bg-[#C8A96B]/10 text-[#EEEEEE]/70 hover:text-[#C8A96B] transition"
               aria-label="Back to menu"
             >
@@ -104,7 +104,7 @@ const CartPage = () => {
             </p>
 
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/menu')}
               className="bg-[#C8A96B] hover:bg-[#D8BB7C] text-[#100C09] text-xs px-5 py-2 rounded-lg inline-flex items-center gap-1.5 font-black shadow-sm transition active:scale-95"
             >
               <Utensils size={15} />
