@@ -523,7 +523,7 @@ export default function Home() {
 
           <Stat
             delay={0}
-            number="50+"
+            number="1000+"
             label="Happy Customers"
           />
 
